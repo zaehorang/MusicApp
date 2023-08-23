@@ -33,7 +33,6 @@ class MusicCell: UITableViewCell {
     // 스토리보드 또는 Nib으로 만들때, 사용하게 되는 생성자 코드
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
         mainImageView.contentMode = .scaleToFill
     }
 
@@ -46,15 +45,14 @@ class MusicCell: UITableViewCell {
     private func loadImage() {
         guard let urlString = self.imageUrl, let url = URL(string: urlString)  else { return }
         
-        DispatchQueue.global().async {
-        
-            guard let data = try? Data(contentsOf: url) else { return }
-            // 오래걸리는 작업이 일어나고 있는 동안에 url이 바뀔 가능성 제거
-            guard urlString == url.absoluteString else { return }
-            
-            DispatchQueue.main.async {
-                self.mainImageView.image = UIImage(data: data)
-            }
-        }
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+                   guard let self,
+                         let data = data,
+                         response != nil,
+                         error == nil else { return }
+                   DispatchQueue.main.async {
+                       self.mainImageView.image = UIImage(data: data) ?? UIImage()
+                   }
+               }.resume()
     }
 }
